@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>发现你的潜在天赋</title>
+<style>
+/* SECTION: base */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg1: #141031; --bg2: #241a4f; --bg3: #0d2b4e;
+  --card: rgba(255,255,255,.07);
+  --card-line: rgba(255,255,255,.14);
+  --text: #f2f0ff; --sub: #b9b3d9;
+  --gold: #ffd166; --violet: #a78bfa; --cyan: #6ee7d8; --pink: #f9a8d4;
+}
+html { scroll-behavior: smooth; }
+body {
+  font-family: "PingFang SC", "Microsoft YaHei", "Segoe UI", system-ui, sans-serif;
+  color: var(--text); min-height: 100vh;
+  background:
+    radial-gradient(1200px 700px at 85% -10%, rgba(167,139,250,.28), transparent 60%),
+    radial-gradient(900px 600px at -10% 30%, rgba(110,231,216,.16), transparent 55%),
+    radial-gradient(800px 500px at 60% 110%, rgba(255,209,102,.12), transparent 55%),
+    linear-gradient(160deg, var(--bg1), var(--bg2) 55%, var(--bg3));
+  background-attachment: fixed;
+}
+.wrap { max-width: 680px; margin: 0 auto; padding: 20px 18px 48px; }
+.screen { display: none; animation: fadein .45s ease; }
+.screen.active { display: block; }
+@keyframes fadein { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+/* SECTION: stars */
+.stars { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+.star { position: absolute; width: 2px; height: 2px; border-radius: 50%; background: #fff; opacity: .5; animation: twinkle 3s infinite ease-in-out; }
+@keyframes twinkle { 0%,100% { opacity: .15; } 50% { opacity: .7; } }
+.wrap { position: relative; z-index: 1; }
+/* SECTION: intro */
+.hero-badge { display: inline-block; font-size: 13px; letter-spacing: 3px; color: var(--cyan); border: 1px solid rgba(110,231,216,.4); border-radius: 999px; padding: 6px 16px; margin-bottom: 22px; }
+h1.title { font-size: clamp(30px, 7vw, 44px); line-height: 1.25; background: linear-gradient(92deg, #fff 20%, var(--gold) 60%, var(--pink)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hero-sub { margin-top: 14px; color: var(--sub); font-size: 15px; line-height: 1.8; }
+.dims { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin: 26px 0; }
+.dim-chip { background: var(--card); border: 1px solid var(--card-line); border-radius: 14px; padding: 12px 12px; font-size: 13.5px; display: flex; align-items: center; gap: 8px; }
+.dim-chip .dot { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+.btn { display: block; width: 100%; border: 0; border-radius: 16px; padding: 16px 20px; font-size: 17px; font-weight: 700; cursor: pointer; transition: transform .12s ease, box-shadow .2s ease; -webkit-tap-highlight-color: transparent; }
+.btn:active { transform: scale(.97); }
+.btn-primary { color: #2a1a05; background: linear-gradient(93deg, var(--gold), #ffb37c); box-shadow: 0 8px 26px rgba(255,180,90,.32); }
+.btn-ghost { background: transparent; color: var(--sub); border: 1px solid var(--card-line); font-weight: 500; font-size: 15px; padding: 12px 16px; }
+.note { margin-top: 16px; font-size: 12.5px; color: var(--sub); text-align: center; line-height: 1.7; }
+/* SECTION: quiz */
+.quiz-top { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+.q-count { font-size: 13px; color: var(--sub); flex: none; }
+.progress { height: 8px; background: rgba(255,255,255,.1); border-radius: 99px; overflow: hidden; margin-bottom: 30px; }
+.progress i { display: block; height: 100%; width: 0%; border-radius: 99px; background: linear-gradient(90deg, var(--violet), var(--cyan)); transition: width .35s ease; }
+.q-card { background: var(--card); border: 1px solid var(--card-line); border-radius: 22px; padding: 28px 22px 22px; box-shadow: 0 18px 50px rgba(0,0,0,.28); }
+.q-text { font-size: clamp(18px, 4.8vw, 22px); line-height: 1.65; font-weight: 700; min-height: 60px; }
+.opts { margin-top: 24px; display: flex; flex-direction: column; gap: 12px; }
+.opt { text-align: left; background: rgba(255,255,255,.05); border: 1px solid var(--card-line); color: var(--text); border-radius: 14px; padding: 15px 16px; font-size: 15.5px; cursor: pointer; display: flex; align-items: center; gap: 12px; transition: background .15s, border-color .15s, transform .1s; -webkit-tap-highlight-color: transparent; }
+.opt .lv { width: 34px; height: 34px; flex: none; border-radius: 50%; background: rgba(255,255,255,.09); display: flex; align-items: center; justify-content: center; font-size: 12.5px; color: var(--sub); }
+.opt:hover { border-color: rgba(110,231,216,.55); }
+.opt.sel { border-color: var(--gold); background: rgba(255,209,102,.14); }
+.opt.sel .lv { background: var(--gold); color: #2a1a05; font-weight: 700; }
+.quiz-foot { margin-top: 18px; display: flex; justify-content: space-between; gap: 12px; }
+.quiz-foot .btn-ghost { width: auto; }
+/* SECTION: result */
+.res-head { text-align: center; margin-bottom: 8px; }
+.res-head .tag { font-size: 12.5px; color: var(--cyan); letter-spacing: 2px; }
+.res-title { font-size: clamp(24px, 6vw, 32px); margin-top: 8px; }
+.res-title em { font-style: normal; color: var(--gold); }
+.res-sub { color: var(--sub); font-size: 14px; margin-top: 8px; line-height: 1.7; }
+.panel { background: var(--card); border: 1px solid var(--card-line); border-radius: 20px; padding: 20px 18px; margin-top: 18px; }
+.panel h3 { font-size: 15px; margin-bottom: 14px; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.panel h3::before { content: ""; width: 4px; height: 16px; border-radius: 2px; background: linear-gradient(var(--gold), var(--pink)); }
+.radar-box { width: 100%; max-width: 380px; margin: 0 auto; }
+.radar-box svg { width: 100%; height: auto; display: block; }
+.bars { display: flex; flex-direction: column; gap: 11px; }
+.bar-row { display: flex; align-items: center; gap: 10px; font-size: 13.5px; }
+.bar-row .nm { width: 76px; flex: none; color: var(--sub); }
+.bar-row .track { flex: 1; height: 10px; background: rgba(255,255,255,.08); border-radius: 99px; overflow: hidden; min-width: 0; }
+.bar-row .fill { height: 100%; width: 0%; border-radius: 99px; transition: width .8s cubic-bezier(.2,.7,.3,1); }
+.bar-row .val { width: 44px; flex: none; text-align: right; color: var(--sub); font-variant-numeric: tabular-nums; }
+.top-card { border-left: 4px solid var(--gold); }
+.top-card .who { font-size: 20px; font-weight: 800; }
+.top-card .alias { color: var(--gold); font-size: 13px; margin-top: 4px; letter-spacing: 1px; }
+.top-card p.desc { color: var(--sub); font-size: 14px; line-height: 1.85; margin-top: 12px; }
+.top-card ul { margin-top: 12px; padding-left: 0; list-style: none; display: flex; flex-direction: column; gap: 8px; }
+.top-card ul li { font-size: 13.5px; line-height: 1.7; color: var(--text); padding-left: 20px; position: relative; }
+.top-card ul li::before { content: "✦"; position: absolute; left: 2px; color: var(--cyan); }
+.second { margin-top: 14px; }
+.second .who { font-size: 16px; font-weight: 700; color: var(--pink); }
+.second p { font-size: 13px; color: var(--sub); line-height: 1.75; margin-top: 6px; }
+.all-dims { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.all-dims .cell { background: rgba(255,255,255,.05); border: 1px solid var(--card-line); border-radius: 14px; padding: 12px; font-size: 13px; }
+.all-dims .cell b { display: block; font-size: 14px; margin-bottom: 4px; }
+.all-dims .cell span { color: var(--sub); line-height: 1.6; }
+.copy-box { width: 100%; min-height: 92px; resize: none; background: rgba(0,0,0,.28); color: var(--sub); border: 1px solid var(--card-line); border-radius: 14px; padding: 12px 14px; font-size: 13px; line-height: 1.7; font-family: inherit; }
+.res-actions { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; }
+.res-actions .btn { width: auto; flex: 1; min-width: 150px; }
+.toast { position: fixed; left: 50%; bottom: 34px; transform: translateX(-50%) translateY(20px); background: rgba(20,16,49,.92); border: 1px solid rgba(110,231,216,.5); color: var(--cyan); padding: 10px 22px; border-radius: 99px; font-size: 14px; opacity: 0; pointer-events: none; transition: all .3s ease; z-index: 9; }
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+/* SECTION: small screens */
+@media (max-width: 420px) {
+  .q-card { padding: 22px 16px 18px; }
+  .bar-row .nm { width: 66px; }
+}
+</style>
+</head>
+<body>
+<div class="stars" id="stars" aria-hidden="true"></div>
+<main class="wrap">
+
+  <!-- SECTION: screen-intro -->
+  <section class="screen active" id="screen-intro">
+    <div style="text-align:center; padding-top: 6vh;">
+      <span class="hero-badge">TALENT QUIZ</span>
+      <h1 class="title">发现你的<br>潜在天赋</h1>
+      <p class="hero-sub">借鉴「多元智能」理论设计的趣味自测。<br>16 道题 · 约 3 分钟 · 点选最真实的感受即可。</p>
+    </div>
+    <div class="dims" id="intro-dims"></div>
+    <button class="btn btn-primary" id="btn-start">开始测试</button>
+    <p class="note">测试结果基于你的自我感受，仅供娱乐与自我探索参考，<br>不构成任何专业心理评估结论。</p>
+  </section>
+
+  <!-- SECTION: screen-quiz -->
+  <section class="screen" id="screen-quiz">
+    <div class="quiz-top">
+      <span class="q-count" id="q-count"></span>
+      <span class="q-count" id="q-dim"></span>
+    </div>
+    <div class="progress"><i id="progress-fill"></i></div>
+    <div class="q-card">
+      <p class="q-text" id="q-text"></p>
+      <div class="opts" id="q-opts"></div>
+    </div>
+    <div class="quiz-foot">
+      <button class="btn btn-ghost" id="btn-back">上一题</button>
+      <button class="btn btn-ghost" id="btn-quit">重新开始</button>
+    </div>
+  </section>
+
+  <!-- SECTION: screen-result -->
+  <section class="screen" id="screen-result">
+    <div class="res-head">
+      <div class="tag">你的天赋画像</div>
+      <h2 class="res-title" id="res-title"></h2>
+      <p class="res-sub" id="res-sub"></p>
+    </div>
+    <div class="panel">
+      <h3>八维天赋雷达</h3>
+      <div class="radar-box" id="radar-box"></div>
+    </div>
+    <div class="panel">
+      <h3>维度得分排行</h3>
+      <div class="bars" id="res-bars"></div>
+    </div>
+    <div class="panel top-card">
+      <h3 style="margin-bottom:6px;">主天赋解读</h3>
+      <div class="who" id="top-name"></div>
+      <div class="alias" id="top-alias"></div>
+      <p class="desc" id="top-desc"></p>
+      <ul id="top-tips"></ul>
+      <div class="second">
+        <div class="who" id="sec-name"></div>
+        <p id="sec-desc"></p>
+      </div>
+    </div>
+    <div class="panel">
+      <h3>八大天赋速览</h3>
+      <div class="all-dims" id="all-dims"></div>
+    </div>
+    <div class="panel">
+      <h3>分享文案</h3>
+      <textarea class="copy-box" id="copy-box" readonly></textarea>
+      <div class="res-actions">
+        <button class="btn btn-primary" id="btn-copy">复制结果</button>
+        <button class="btn btn-ghost" id="btn-again">重新测试</button>
+      </div>
+    </div>
+    <p class="note">本测试为自我探索小工具，结果随当下感受而变化，仅供娱乐参考。</p>
+  </section>
+
+</main>
+<div class="toast" id="toast"></div>
+
+<script>
+'use strict';
+/* SECTION: data - 维度与题库 */
+const DIMS = {
+  lang: { name: '语言天赋', short: '语言', color: '#ffd166',
+    alias: '文字炼金师',
+    desc: '你对词语、声音和表达天生敏感。别人还在组织语言时，你已经能把复杂的事情说得清楚又漂亮。阅读、写作、演讲、翻译、文案都是你能发光的地方。',
+    tips: ['多写：每天 200 字随笔，把「想到」变成「写出」', '复述练习：读完一篇文章，用自己的话讲给别人听', '尝试公开表达：演讲、主持、短视频口播都能放大你的优势'] },
+  logic: { name: '逻辑天赋', short: '逻辑', color: '#6ee7d8',
+    alias: '问题拆解师',
+    desc: '你习惯追问因果，擅长把混乱的信息整理成条理清晰的框架。数字、规则、推理游戏对你有天然吸引力，编程、分析、科研、策略类工作容易让你进入心流。',
+    tips: ['把日常问题写成「已知—未知—求解路径」练结构化思维', '尝试编程或数据分析入门，逻辑有了用武之地', '做决策时画决策树，你会比直觉派更稳'] },
+  space: { name: '空间天赋', short: '空间', color: '#a78bfa',
+    alias: '内心画布师',
+    desc: '你脑中有画面：方向感好、看图纸不费劲，搭乐高、布置房间、画草图都得心应手。设计、建筑、摄影、视频剪辑、3D 建模是你能量天然对口的领域。',
+    tips: ['学一个视觉工具：绘图软件、摄影构图或建模', '出门刻意记路线，进一步强化你的心智地图', '把想法画出来再说话，你会发现自己「看得见」答案'] },
+  music: { name: '音乐天赋', short: '音乐', color: '#f9a8d4',
+    alias: '频率捕手',
+    desc: '旋律、节奏、音色在你这里不是背景杂音，而是能被拆解和记住的信息。你容易被音乐打动，也可能一学就会一种乐器。作曲、演唱、声音设计、配乐都藏着你的舞台。',
+    tips: ['捡起来一件易入门乐器（尤克里里、键盘），保持手感', '试着给视频或歌单挑配乐，练「听觉判断力」', '记录让你有情绪的旋律，那是你的创作素材库'] },
+  body: { name: '动觉天赋', short: '动觉', color: '#7dd3fc',
+    alias: '身体经济学家',
+    desc: '你的智慧长在手上和身上：动作一做就会，工具一用就熟。体育、舞蹈、手工、烹饪、器械操作是你的主场——比起读说明书，你更相信「先动手试试」。',
+    tips: ['技能学习优先选实操课，效果远超看书', '运动类项目固定一项精进，身体记忆会给你回报', '手工、模型、烹饪都是天赋出口，别只当爱好'] },
+  interp: { name: '人际天赋', short: '人际', color: '#86efac',
+    alias: '氛围建筑师',
+    desc: '你能读出别人的情绪，也懂得调整自己的表达。群里冷场你接得住，朋友有心事第一个找你。销售、教育、谈判、团队协调这类「和人打交道」的事，你做起来自带优势。',
+    tips: ['练习「复述对方观点再回应」，共情会变影响力', '主动当小组里的组织者，协调力越用越强', '把察言观色写成观察笔记，从直觉升级为方法'] },
+  intrap: { name: '内省天赋', short: '内省', color: '#fda4af',
+    alias: '自我导航员',
+    desc: '你对自己的动机、情绪、目标有罕见的清晰度。别人随大流时，你往往知道自己要什么。写作、心理咨询、独立研究、人生规划师型的工作，都需要你这种「向内看」的能力。',
+    tips: ['保持日记或周复盘，内省需要固定出口', '重大决定前先写「我要／我不要／我担心」三行', '你的自我认知是稀缺资源，适合分享给迷茫的人'] },
+  nature: { name: '自然天赋', short: '自然', color: '#bef264',
+    alias: '万物分类师',
+    desc: '你对花草、动物、天气、地质这些「活的东西」和自然规律有天然的观察欲。你能注意到别人看不见的细节差异。园艺、生态保护、兽医、博物科普、食品与农业是你的领域。',
+    tips: ['养成拍照＋记录的观察习惯，积少成多成专家', '参与一次本地自然观察或志愿活动，边玩边验证', '把分类和辨别的乐趣变成内容：科普笔记、植物手账'] },
+};
+const DIM_KEYS = Object.keys(DIMS);
+const QUESTIONS = [
+  { dim: 'lang',  text: '写东西或发消息时，我会琢磨用词，甚至能感觉到句子的节奏好不好听。' },
+  { dim: 'logic', text: '遇到问题，我习惯先拆成几个小步骤，弄清楚原因再想办法。' },
+  { dim: 'space', text: '看地图或走新路线时，我脑子里能自动浮现一张「路线图」，很少迷路。' },
+  { dim: 'music', text: '听几遍的歌就能跟着唱，别人跑调我一下就能听出来。' },
+  { dim: 'body',  text: '学新动作（球类、舞蹈、手工）时，我自己动手做比看教程学得快得多。' },
+  { dim: 'interp',text: '朋友聚会里，我很容易察觉到谁情绪不对，并自然地去搭话照顾。' },
+  { dim: 'intrap',text: '我经常想清楚自己的感受和动机，大概知道自己到底想要什么。' },
+  { dim: 'nature',text: '我对植物、动物很感兴趣，能注意到叶片花纹或宠物状态的细微差别。' },
+  { dim: 'lang',  text: '新词、方言、外语我学得挺快，也喜欢文字游戏和双关的巧妙。' },
+  { dim: 'logic', text: '数独、逻辑题、规律推理这类烧脑游戏，越难我越想挑战。' },
+  { dim: 'space', text: '拼模型、布置房间、画示意图之前，我心里已经「看见」了成品样子。' },
+  { dim: 'music', text: '听到有节奏的音乐，我会忍不住跟着打拍子，情绪很容易被旋律带走。' },
+  { dim: 'body',  text: '做饭、拆装东西、运动时，我能长时间专注手上和身体上的事。' },
+  { dim: 'interp',text: '给别人讲一件事时，我能看出他听懂了没有，并换个说法再讲。' },
+  { dim: 'intrap',text: '做重要选择时，我更相信内心的判断，哪怕别人暂时不理解。' },
+  { dim: 'nature',text: '观察云的形状、昆虫、石头花纹这些自然细节，我能安安静静看很久。' },
+];
+const OPTIONS = [
+  { label: '完全不符合', score: 0 },
+  { label: '不太符合',   score: 1 },
+  { label: '比较符合',   score: 2 },
+  { label: '非常符合',   score: 3 },
+];
+const STORE_KEY = 'talent-q…es-v1';
+
+/* SECTION: state */
+let answers = loadAnswers(); // 数组，元素为 0-3，未答为 null
+let cur = 0;
+
+function loadAnswers() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (!raw) return QUESTIONS.map(() => null);
+    const arr = JSON.parse(raw);
+    if (Array.isArray(arr) && arr.length === QUESTIONS.length) return arr;
+  } catch (e) { /* 忽略存储异常 */ }
+  return QUESTIONS.map(() => null);
+}
+function saveAnswers() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(answers)); } catch (e) { /* 忽略 */ }
+}
+
+/* SECTION: ui helpers */
+const $ = (id) => document.getElementById(id);
+function showScreen(id) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  $(id).classList.add('active');
+  window.scrollTo(0, 0);
+}
+let toastTimer = null;
+function toast(msg) {
+  const t = $('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+}
+
+/* SECTION: intro render */
+(function renderIntroDims() {
+  const box = $('intro-dims');
+  DIM_KEYS.forEach(k => {
+    const d = DIMS[k];
+    const div = document.createElement('div');
+    div.className = 'dim-chip';
+    const dot = document.createElement('span');
+    dot.className = 'dot';
+    dot.style.background = d.color;
+    const txt = document.createElement('span');
+    txt.textContent = d.name;
+    div.appendChild(dot);
+    div.appendChild(txt);
+    box.appendChild(div);
+  });
+})();
+
+/* SECTION: quiz logic */
+function renderQuestion() {
+  const q = QUESTIONS[cur];
+  $('q-count').textContent = '第 ' + (cur + 1) + ' / ' + QUESTIONS.length + ' 题';
+  $('q-dim').textContent = '凭第一感觉选';
+  $('progress-fill').style.width = Math.round(((cur) / QUESTIONS.length) * 100) + '%';
+  $('q-text').textContent = q.text;
+  const box = $('q-opts');
+  box.textContent = '';
+  OPTIONS.forEach((o, i) => {
+    const btn = document.createElement('button');
+    btn.className = 'opt';
+    if (answers[cur] === i) btn.classList.add('sel');
+    const lv = document.createElement('span');
+    lv.className = 'lv';
+    lv.textContent = String(i + 1);
+    const lab = document.createElement('span');
+    lab.textContent = o.label;
+    btn.appendChild(lv);
+    btn.appendChild(lab);
+    btn.addEventListener('click', () => pickOption(i, btn));
+    box.appendChild(btn);
+  });
+  $('btn-back').style.visibility = cur === 0 ? 'hidden' : 'visible';
+}
+function pickOption(i, btn) {
+  answers[cur] = i;
+  saveAnswers();
+  document.querySelectorAll('#q-opts .opt').forEach(b => b.classList.remove('sel'));
+  btn.classList.add('sel');
+  setTimeout(() => {
+    if (cur < QUESTIONS.length - 1) {
+      cur += 1;
+      renderQuestion();
+    } else {
+      showResult();
+    }
+  }, 240);
+}
+$('btn-start').addEventListener('click', () => {
+  // 若有未完成的进度，从第一题开始重看；已答完则直接出结果
+  cur = 0;
+  showScreen('screen-quiz');
+  renderQuestion();
+});
+$('btn-back').addEventListener('click', () => {
+  if (cur > 0) { cur -= 1; renderQuestion(); }
+});
+$('btn-quit').addEventListener('click', () => {
+  answers = QUESTIONS.map(() => null);
+  saveAnswers();
+  showScreen('screen-intro');
+});
+
+/* SECTION: scoring */
+function computeScores() {
+  const raw = {};
+  DIM_KEYS.forEach(k => { raw[k] = 0; });
+  QUESTIONS.forEach((q, idx) => {
+    const a = answers[idx];
+    if (a !== null) raw[q.dim] += OPTIONS[a].score;
+  });
+  const max = 6; // 每维 2 题 × 最高 3 分
+  return DIM_KEYS.map(k => ({
+    key: k,
+    name: DIMS[k].name,
+    raw: raw[k],
+    pct: Math.round((raw[k] / max) * 100),
+  })).sort((x, y) => y.raw - x.raw || DIM_KEYS.indexOf(x.key) - DIM_KEYS.indexOf(y.key));
+}
+
+/* SECTION: radar (SVG) */
+function buildRadar(scores) {
+  const cx = 190, cy = 170, R = 100;
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS, 'svg');
+  svg.setAttribute('viewBox', '0 0 380 330');
+  const n = scores.length;
+  const pt = (i, r) => {
+    const ang = (-90 + i * (360 / n)) * Math.PI / 180;
+    return [cx + r * Math.cos(ang), cy + r * Math.sin(ang)];
+  };
+  // 网格环
+  [0.25, 0.5, 0.75, 1].forEach(f => {
+    const poly = document.createElementNS(svgNS, 'polygon');
+    poly.setAttribute('points', scores.map((s, i) => pt(i, R * f).join(',')).join(' '));
+    poly.setAttribute('fill', 'none');
+    poly.setAttribute('stroke', 'rgba(255,255,255,0.13)');
+    svg.appendChild(poly);
+  });
+  // 轴线
+  for (let i = 0; i < n; i++) {
+    const line = document.createElementNS(svgNS, 'line');
+    const [x, y] = pt(i, R);
+    line.setAttribute('x1', cx); line.setAttribute('y1', cy);
+    line.setAttribute('x2', x);  line.setAttribute('y2', y);
+    line.setAttribute('stroke', 'rgba(255,255,255,0.10)');
+    svg.appendChild(line);
+  }
+  // 数据多边形
+  const data = document.createElementNS(svgNS, 'polygon');
+  data.setAttribute('points', scores.map((s, i) => pt(i, R * Math.max(s.pct, 4) / 100).join(',')).join(' '));
+  data.setAttribute('fill', 'rgba(255,209,102,0.22)');
+  data.setAttribute('stroke', '#ffd166');
+  data.setAttribute('stroke-width', '2');
+  svg.appendChild(data);
+  // 数据点 + 标签
+  scores.forEach((s, i) => {
+    const [dx0, dy0] = pt(i, R * Math.max(s.pct, 4) / 100);
+    const c = document.createElementNS(svgNS, 'circle');
+    c.setAttribute('cx', dx0); c.setAttribute('cy', dy0); c.setAttribute('r', 3.5);
+    c.setAttribute('fill', DIMS[s.key].color);
+    svg.appendChild(c);
+    const [lx, ly] = pt(i, R + 24);
+    const ang = (-90 + i * (360 / n)) * Math.PI / 180;
+    const cosv = Math.cos(ang), sinv = Math.sin(ang);
+    const t = document.createElementNS(svgNS, 'text');
+    t.setAttribute('x', lx); t.setAttribute('y', ly + 4);
+    t.setAttribute('text-anchor', Math.abs(cosv) < 0.35 ? 'middle' : (cosv > 0 ? 'start' : 'end'));
+    t.setAttribute('fill', s.pct >= 50 ? '#f2f0ff' : 'rgba(185,179,217,0.75)');
+    t.setAttribute('font-size', '12.5');
+    t.textContent = DIMS[s.key].short;
+    svg.appendChild(t);
+  });
+  const box = $('radar-box');
+  box.textContent = '';
+  box.appendChild(svg);
+}
+
+/* SECTION: result render */
+function showResult() {
+  const scores = computeScores();
+  const top = scores[0], sec = scores[1];
+  const topD = DIMS[top.key], secD = DIMS[sec.key];
+
+  $('res-title').textContent = '';
+  const em = document.createElement('em');
+  em.textContent = topD.name.replace('天赋', '') + '型 · ' + topD.alias;
+  $('res-title').appendChild(document.createTextNode('你是「'));
+  $('res-title').appendChild(em);
+  $('res-title').appendChild(document.createTextNode('」'));
+
+  const subText = '辅天赋：' + secD.name + '。得分越高，代表你在日常感受中越倾向该维度。';
+  $('res-sub').textContent = subText;
+
+  buildRadar(scores);
+
+  // 排行条
+  const barsBox = $('res-bars');
+  barsBox.textContent = '';
+  scores.forEach(s => {
+    const row = document.createElement('div');
+    row.className = 'bar-row';
+    const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = s.name;
+    const track = document.createElement('div'); track.className = 'track';
+    const fill = document.createElement('i'); fill.className = 'fill';
+    fill.style.background = DIMS[s.key].color;
+    track.appendChild(fill);
+    const val = document.createElement('span'); val.className = 'val'; val.textContent = s.pct + '%';
+    row.appendChild(nm); row.appendChild(track); row.appendChild(val);
+    barsBox.appendChild(row);
+    requestAnimationFrame(() => { fill.style.width = s.pct + '%'; });
+  });
+
+  // 主天赋卡
+  $('top-name').textContent = topD.name + '（' + top.pct + '%）';
+  $('top-alias').textContent = '代号 · ' + topD.alias;
+  $('top-desc').textContent = topD.desc;
+  const tipsBox = $('top-tips');
+  tipsBox.textContent = '';
+  topD.tips.forEach(t => {
+    const li = document.createElement('li');
+    li.textContent = t;
+    tipsBox.appendChild(li);
+  });
+  $('sec-name').textContent = '辅天赋 · ' + secD.name + '（' + sec.pct + '%）';
+  $('sec-desc').textContent = secD.desc;
+
+  // 八维速览
+  const allBox = $('all-dims');
+  allBox.textContent = '';
+  DIM_KEYS.forEach(k => {
+    const d = DIMS[k];
+    const cell = document.createElement('div');
+    cell.className = 'cell';
+    const b = document.createElement('b'); b.textContent = d.name; b.style.color = d.color;
+    const s = document.createElement('span'); s.textContent = d.alias + ' · ' + d.tips[0];
+    cell.appendChild(b); cell.appendChild(s);
+    allBox.appendChild(cell);
+  });
+
+  // 分享文案
+  const lines = ['【发现我的潜在天赋】',
+    '主天赋：' + topD.name + ' · ' + topD.alias + '（' + top.pct + '%）',
+    '辅天赋：' + secD.name + '（' + sec.pct + '%）',
+    '八维得分：' + DIM_KEYS.map(k => {
+      const s = scores.find(x => x.key === k);
+      return DIMS[k].short + ' ' + s.pct + '%';
+    }).join(' / '),
+    '', '——来自「发现你的潜在天赋」趣味自测，结果仅供娱乐参考'];
+  $('copy-box').value = lines.join('\n');
+
+  showScreen('screen-result');
+}
+
+/* SECTION: result actions */
+$('btn-copy').addEventListener('click', () => {
+  const ta = $('copy-box');
+  ta.select();
+  const done = () => toast('已复制，去粘贴给朋友吧');
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(ta.value).then(done).catch(() => fallback());
+  } else { fallback(); }
+  function fallback() {
+    try { document.execCommand('copy'); done(); }
+    catch (e) { toast('复制失败，可长按选中文本手动复制'); }
+  }
+});
+$('btn-again').addEventListener('click', () => {
+  answers = QUESTIONS.map(() => null);
+  saveAnswers();
+  cur = 0;
+  showScreen('screen-quiz');
+  renderQuestion();
+});
+
+/* SECTION: stars deco */
+(function makeStars() {
+  const box = $('stars');
+  const frag = document.createDocumentFragment();
+  for (let i = 0; i < 40; i++) {
+    const s = document.createElement('i');
+    s.className = 'star';
+    s.style.left = (Math.random() * 100) + '%';
+    s.style.top = (Math.random() * 100) + '%';
+    const sz = (Math.random() * 1.6 + 1).toFixed(1);
+    s.style.width = sz + 'px';
+    s.style.height = sz + 'px';
+    s.style.animationDelay = (Math.random() * 3).toFixed(2) + 's';
+    frag.appendChild(s);
+  }
+  box.appendChild(frag);
+})();
+</script>
+</body>
+</html>
